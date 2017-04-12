@@ -1,130 +1,33 @@
 import sys
 
 class State():
-    def __init__(self, lhs, rhs):
+    def __init__(self, lhs, rhs, states = []):
         self.lhs = lhs
         self.rhs = rhs
-
-    def set_node_list(self, node):
-        self.node = node
-
-    def get_node_list(self):
-        return self.node
-
-    def check_boat_location(self):
-        return 'L' if self.lhs['B'] == 1 and self.rhs['B'] == 0 else 'R'
-
-    def is_initial_state(self):
-        return self.lhs['M'] == 0 and self.lhs['C'] == 0 and self.lhs['B'] == 0
-
-    def is_goal(self, goal):
-        lflag = self.lhs['M'] == goal.lhs['M'] and self.lhs['C'] == goal.lhs['C'] and self.lhs['B'] == goal.lhs['B']
-        rflag = self.rhs['M'] == goal.rhs['M'] and self.rhs['C'] == goal.rhs['C']
-        return lflag and rflag and self.rhs['B'] == goal.rhs['B']
+        self.states = states
 
     def is_valid(self):
-        mflag = self.lhs['M'] >= 0 and self.rhs['M'] >= 0
-        cflag = self.lhs['C'] >= 0 and self.rhs['C'] >= 0
-        lflag = self.lhs['M'] == 0 or self.lhs['M'] >= self.lhs['C']
-        rflag = self.rhs['M'] == 0 or self.rhs['M'] >= self.rhs['C']
-        return mflag and cflag and lflag and rflag
+        return self.lhs['C'] >= 0 and self.rhs['C'] >= 0 and \
+               self.lhs['M'] >= 0 and self.rhs['M'] >= 0 and \
+               (self.lhs['M'] >= self.lhs['C'] or self.lhs['M'] == 0) and \
+               (self.rhs['M'] >= self.rhs['C'] or self.rhs['M'] == 0)
 
-    def print_state(self):
-        print 'Left:', self. lhs, 'Right:', self. rhs
+    def is_goal(self, goal):
+        return self.rhs['C'] == goal.fetch_rhs()['C'] and \
+               self.rhs['B'] == goal.fetch_rhs()['B'] and \
+               self.rhs['M'] == goal.fetch_rhs()['M']
 
-def func_init_move(state, which = None):
-    lhs, rhs = state.lhs.copy(), state.rhs.copy()
+    def store_states(self, states):
+        self.states = states
 
-    if which == None:
-        lhs['M'] += 1
-        lhs['C'] += 1
-        lhs['B'] = 1
-        rhs['M'] -= 1
-        rhs['C'] -= 1
-        rhs['B'] = 0
-    else:
-        lhs[which] += 2
-        lhs['B'] = 1
-        rhs[which] -= 2
-        rhs['B'] = 0
+    def load_states(self):
+        return self.states
 
-    return State(lhs, rhs)
+    def fetch_lhs(self):
+        return self.lhs
 
-def func_left_right(state, which):
-    lhs, rhs = state.lhs.copy(), state.rhs.copy()
-    lhs[which] -= 1
-    lhs['B'] = 0
-    rhs[which] += 1
-    rhs['B'] = 1
-    return State(lhs, rhs)
-
-def func_right_left(state, which):
-    lhs, rhs = state.lhs.copy(), state.rhs.copy()
-    lhs[which] += 1
-    lhs['B'] = 1
-    rhs[which] -= 1
-    rhs['B'] = 0
-    return State(lhs, rhs)
-
-def func_move_state(state):
-    state_list = []
-
-    if state.is_initial_state():
-        new_state = func_init_move(state, 'M')
-        new_state.set_node_list([])
-
-        if new_state.is_valid():
-            state_list.append(new_state)
-
-        new_state = func_init_move(state)
-        new_state.set_node_list([])
-
-        if new_state.is_valid():
-            state_list.append(new_state)
-
-        new_state = func_init_move(state, 'C')
-        new_state.set_node_list([])
-
-        if new_state.is_valid():
-            state_list.append(new_state)
-    else:
-        if state.check_boat_location() == 'L':
-            new_state = func_left_right(state, 'C')
-            new_state.set_node_list([])
-
-            if new_state.is_valid():
-                state_list.append(new_state)
-
-            new_state = func_left_right(state, 'M')
-            new_state.set_node_list([])
-
-            if new_state.is_valid():
-                state_list.append(new_state)
-
-        if state.check_boat_location() == 'R':
-            new_state = func_right_left(state, 'C')
-            new_state.set_node_list([])
-
-            if new_state.is_valid():
-                state_list.append(new_state)
-
-            new_state = func_right_left(state, 'M')
-            new_state.set_node_list([])
-
-            if new_state.is_valid():
-                state_list.append(new_state)
-
-    state.set_node_list(state_list)
-    return state
-
-def func_create_path(state, goal, i = 0):
-    print ' ' * i,
-    state.print_state()
-    state_list = state.get_node_list()
-    i += 1
-    for state_item in state_list:
-        new_state = func_move_state(state_item)
-        func_create_path(new_state, goal, i)
+    def fetch_rhs(self):
+        return self.rhs
 
 def func_read_file(name):
     fp = open(name, 'r');
@@ -139,13 +42,96 @@ def func_write_file(name, result):
     fp.write('\n'.join(result))
     fp.close()
 
-def func_print_states(state, i = 0):
-    print '    ' * i,
-    state.print_state()
-    nodes = state.get_node_list()
-    i += 1
-    for node in nodes:
-        func_print_states(node, i)
+def func_move_one(lhs, rhs, which, count, flag):
+    if flag:
+        lhs[which] += count
+        lhs['B'] = 1
+        rhs[which] -= count
+        rhs['B'] = 0
+        return State(lhs, rhs)
+    else:
+        lhs[which] -= count
+        lhs['B'] = 0
+        rhs[which] += count
+        rhs['B'] = 1
+        return State(lhs, rhs)
+
+def func_move_two(lhs, rhs, flag):
+    if flag:
+        lhs['C'] += 1
+        lhs['B'] = 1
+        lhs['M'] += 1
+        rhs['C'] -= 1
+        rhs['B'] = 0
+        rhs['M'] -= 1
+        return State(lhs, rhs)
+    else:
+        lhs['C'] -= 1
+        lhs['B'] = 0
+        lhs['M'] -= 1
+        rhs['C'] += 1
+        rhs['B'] = 1
+        rhs['M'] += 1
+        return State(lhs, rhs)
+
+def func_build_successor(state):
+    states, flag = [], state.fetch_lhs()['B'] == 0 and state.fetch_rhs()['B'] == 1
+
+    lhs, rhs = state.fetch_lhs().copy(), state.fetch_rhs().copy()
+    if rhs['C'] >= 2:
+        new_state = func_move_one(lhs, rhs, 'C', 2, flag)
+        if new_state.is_valid():
+            states.append(new_state)
+
+    lhs, rhs = state.fetch_lhs().copy(), state.fetch_rhs().copy()
+    if rhs['C'] >= 1:
+        new_state = func_move_one(lhs, rhs, 'C', 1, flag)
+        if new_state.is_valid():
+            states.append(new_state)
+
+    lhs, rhs = state.fetch_lhs().copy(), state.fetch_rhs().copy()
+    if rhs['C'] >= 1 and rhs['M'] >= 1:
+        new_state = func_move_two(lhs, rhs, flag)
+        if new_state.is_valid():
+            states.append(new_state)
+
+    lhs, rhs = state.fetch_lhs().copy(), state.fetch_rhs().copy()
+    if rhs['M'] >= 1:
+        new_state = func_move_one(lhs, rhs, 'M', 1, flag)
+        if new_state.is_valid():
+            states.append(new_state)
+
+    lhs, rhs = state.fetch_lhs().copy(), state.fetch_rhs().copy()
+    if rhs['M'] >= 2:
+        new_state = func_move_one(lhs, rhs, 'M', 2, flag)
+        if new_state.is_valid():
+            states.append(new_state)
+
+    return states
+
+def func_build_tree(state, goal):
+    if state.is_goal(goal):
+        return
+
+    for item in state.load_states():
+        successor = func_build_successor(item)
+        item.store_states(successor)
+        func_print_state(item)
+        func_build_tree(item, goal)
+
+def func_print_state(state):
+    print 'LHS:', state.fetch_lhs(), '<--->', 'RHS:', state.fetch_rhs()
+    for item in state.load_states():
+        print '    LHS:', item.fetch_lhs(), '<--->', 'RHS:', item.fetch_rhs()
+    print
+
+def func_print_tree(tree, level = 0):
+    lhs = '(' + ','.join([str(value) for value in tree.fetch_lhs().values()]) + ')'
+    rhs = '(' + ','.join([str(value) for value in tree.fetch_rhs().values()]) + ')'
+    print ' ' * level + lhs, '<--->', rhs
+    level += 1
+    for state in tree.load_states():
+        func_print_tree(state, level)
 
 if __name__ == '__main__':
     params = sys.argv
@@ -153,13 +139,13 @@ if __name__ == '__main__':
     goal_file = params[2]
     mode = params[3]
     output = params[4]
-    lhs, rhs = func_read_file(start_file)
-    init_state = State(lhs, rhs)
-    lhs, rhs = func_read_file(goal_file)
-    goal_state = State(lhs, rhs)
-    init_state = func_move_state(init_state)
-    func_print_states(init_state)
-    print
-    func_create_path(init_state, goal_state)
-    # func_print_states(init_state)
+    start_lhs, start_rhs = func_read_file(start_file)
+    goal_lhs, goal_rhs = func_read_file(goal_file)
+
+    goal_state = State(goal_lhs, goal_rhs)
+    init_state = State(start_lhs, start_rhs)
+    successor = func_build_successor(init_state)
+    init_state.store_states(successor)
+    func_build_tree(init_state, goal_state)
+    func_print_tree(init_state)
     # func_write_file(output, ['(3,3,left,0,0)', '(2,3,left,1,0)', '(0,3,right,3,0)', '(1,3,left,2,0)', '(1,1,right,2,2)', '(2,2,left,1,1)', '(2,0,right,1,3)', '(3,0,left,0,3)', '(1,0,right,2,3)', '(1,1,left,2,2)', '(0,0,right,3,3)', '(1,3,right,2,0)'])
