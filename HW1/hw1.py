@@ -1,10 +1,13 @@
-import sys
+import sys, time
 
 class State():
     def __init__(self, lhs, rhs, states = []):
         self.lhs = lhs
         self.rhs = rhs
         self.states = states
+
+    def is_initial(self):
+        return self.lhs['C'] == 0 and self.lhs['M'] == 0 and self.lhs['B'] == 0
 
     def is_valid(self):
         return self.lhs['C'] >= 0 and self.rhs['C'] >= 0 and \
@@ -111,13 +114,26 @@ def func_build_successor(state):
 
 def func_build_tree(state, goal):
     if state.is_goal(goal):
-        return
+        return state
 
-    for item in state.load_states():
-        successor = func_build_successor(item)
-        item.store_states(successor)
-        func_print_state(item)
-        func_build_tree(item, goal)
+    stack, explore = [state], set()
+    while stack != []:
+        temp_state = stack.pop(0)
+        if temp_state.is_goal(goal):
+            return temp_state
+        successor = func_build_successor(temp_state)
+        temp_state.store_states(successor)
+        explore.add(temp_state)
+        for item in successor:
+            if ((item not in explore) or (item not in stack)) and (not item.is_initial()):
+                print 'LHS:', temp_state.fetch_lhs(), '<--->', 'RHS:', temp_state.fetch_rhs()
+                successor = func_build_successor(item)
+                item.store_states(successor)
+                stack.append(item)
+        time.sleep(1)
+        print
+
+    return None
 
 def func_print_state(state):
     print 'LHS:', state.fetch_lhs(), '<--->', 'RHS:', state.fetch_rhs()
@@ -144,8 +160,8 @@ if __name__ == '__main__':
 
     goal_state = State(goal_lhs, goal_rhs)
     init_state = State(start_lhs, start_rhs)
-    successor = func_build_successor(init_state)
-    init_state.store_states(successor)
+    # successor = func_build_successor(init_state)
+    # init_state.store_states(successor)
     func_build_tree(init_state, goal_state)
     func_print_tree(init_state)
     # func_write_file(output, ['(3,3,left,0,0)', '(2,3,left,1,0)', '(0,3,right,3,0)', '(1,3,left,2,0)', '(1,1,right,2,2)', '(2,2,left,1,1)', '(2,0,right,1,3)', '(3,0,left,0,3)', '(1,0,right,2,3)', '(1,1,left,2,2)', '(0,0,right,3,3)', '(1,3,right,2,0)'])
