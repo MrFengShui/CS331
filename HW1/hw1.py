@@ -22,10 +22,10 @@ class State():
 
 	def on_left(self):
 		return self.lhs['B'] == 1 and self.rhs['B'] == 0
-		
+
 	def on_right(self):
 		return self.lhs['B'] == 0 and self.rhs['B'] == 1
-		
+
 	def store_states(self, states):
 		self.states = states
 
@@ -37,19 +37,6 @@ class State():
 
 	def fetch_rhs(self):
 		return self.rhs
-
-def func_read_file(name):
-	fp = open(name, 'r');
-	lines = fp.readlines();
-	fp.close();
-	lhs = lines[0].rstrip().split(',')
-	rhs = lines[1].rstrip().split(',')
-	return {'M': int(lhs[0]), 'C': int(lhs[1]), 'B': int(lhs[2])}, {'M': int(rhs[0]), 'C': int(rhs[1]), 'B': int(rhs[2])}
-
-def func_write_file(name, result):
-	fp = open(name, 'w+')
-	fp.write('\n'.join(result))
-	fp.close()
 
 def func_move_one(lhs, rhs, which, count, flag):
 	if flag:
@@ -113,10 +100,17 @@ def func_build_successor(state):
 
 	return states
 
+def func_state_exist(target, array):
+	for item in array:
+		if cmp(target.lhs, item.lhs) == 0 and cmp(target.rhs, item.rhs) == 0:
+			return True
+
+	return False
+
 def func_dfs_search(state, goal):
-	state_stack, state_explore = [], []	
+	state_stack, state_explore = [], []
 	state_stack.append(state)
-	
+
 	while state_stack:
 		tmp_state = state_stack.pop()
 		if tmp_state.is_goal(goal):
@@ -126,15 +120,15 @@ def func_dfs_search(state, goal):
 		if tmp_state not in state_explore:
 			state_explore.append(tmp_state)
 			for item in successor:
-				if (item not in state_explore) and (not item.is_initial()):
+				if (not func_state_exist(item, state_explore)) and (not item.is_initial()):
 					state_stack.append(item)
 
 	return None
 
 def func_bfs_search(state, goal):
-	state_stack, state_explore = [], []	
+	state_stack, state_explore = [], []
 	state_stack.append(state)
-	
+
 	while state_stack:
 		tmp_state = state_stack.pop(0)
 		if tmp_state.is_goal(goal):
@@ -144,24 +138,55 @@ def func_bfs_search(state, goal):
 		if tmp_state not in state_explore:
 			state_explore.append(tmp_state)
 			for item in successor:
-				if (item not in state_explore) and (not item.is_initial()):
+				if (not func_state_exist(item, state_explore)) and (not item.is_initial()):
 					state_stack.append(item)
-		
+
 	return None
-	
+
+def func_dls_search(state, goal, depth):
+	if depth == 0 and state.is_goal(goal):
+		return state
+
+	if depth > 0:
+		successor = func_build_successor(state)
+		state.store_states(successor)
+		for item in state.load_states():
+			found = func_dls_search(item, goal, depth - 1)
+			if found:
+				return found
+
+	return None
+
+def func_iddfs_search(state, goal, depth = 0):
+	while True:
+		found = func_dls_search(state, goal, depth)
+		if found:
+			return found
+		depth += 1
+	return None
+
+def func_astar_search():
+	return None
+
 def func_print_state(state):
 	print 'LHS:', state.fetch_lhs(), '<--->', 'RHS:', state.fetch_rhs()
 	for item in state.load_states():
 		print 'LHS:', item.fetch_lhs(), '<--->', 'RHS:', item.fetch_rhs()
 	print
 
-def func_print_string(tree, result = []):
-	lhs = '(' + ','.join([str(value) for value in tree.fetch_lhs().values()]) + ')'
-	rhs = '(' + ','.join([str(value) for value in tree.fetch_rhs().values()]) + ')'
-	result.append(lhs + ' <---> ' + rhs)
+def func_print_string(tree, result, goal, item = ''):
+	lhs, rhs = tree.fetch_lhs(), tree.fetch_rhs()
+	str_lhs = '(' + ','.join([str(value) for value in lhs.values()]) + ')'
+	str_rhs = '(' + ','.join([str(value) for value in rhs.values()]) + ')'
+	item += str_lhs + ' ' + str_rhs + '-->'
+
+	if cmp(lhs, goal.fetch_lhs()) == 0 and cmp(rhs, goal.fetch_rhs()) == 0:
+		temp = item[:-3].split('-->')
+		result.append(temp)
+
 	for state in tree.load_states():
-		func_print_tree(state, result)
-	
+		func_print_string(state, result, goal, item)
+
 def func_print_tree(tree, level = 0):
 	lhs = '(' + ','.join([str(value) for value in tree.fetch_lhs().values()]) + ')'
 	rhs = '(' + ','.join([str(value) for value in tree.fetch_rhs().values()]) + ')'
@@ -169,6 +194,24 @@ def func_print_tree(tree, level = 0):
 	level += 1
 	for state in tree.load_states():
 		func_print_tree(state, level)
+
+def func_read_file(name):
+	fp = open(name, 'r');
+	lines = fp.readlines();
+	fp.close();
+	lhs = lines[0].rstrip().split(',')
+	rhs = lines[1].rstrip().split(',')
+	return {'M': int(lhs[0]), 'C': int(lhs[1]), 'B': int(lhs[2])}, {'M': int(rhs[0]), 'C': int(rhs[1]), 'B': int(rhs[2])}
+
+def func_write_file(name, results):
+	fp = open(name, 'w+')
+	fp.write('(C,B,M) (C,B,M)\n')
+	i = 1
+	for result in results:
+		head = '* Solution-[' + str(i) + '] *\n'
+		fp.write(head + '\n'.join(result) + '\n')
+		i += 1
+	fp.close()
 
 if __name__ == '__main__':
 	params = sys.argv
@@ -178,13 +221,22 @@ if __name__ == '__main__':
 	output = params[4]
 	start_lhs, start_rhs = func_read_file(start_file)
 	goal_lhs, goal_rhs = func_read_file(goal_file)
+	goal_state, init_state = State(goal_lhs, goal_rhs), State(start_lhs, start_rhs)
 
-	goal_state = State(goal_lhs, goal_rhs)
-	init_state = State(start_lhs, start_rhs)
-	# func_dfs_search(init_state, goal_state)
-	func_bfs_search(init_state, goal_state)
+	if mode == 'bfs':
+		func_bfs_search(init_state, goal_state)
+
+	if mode == 'dfs':
+		func_dfs_search(init_state, goal_state)
+
+	if mode == 'iddfs':
+		func_iddfs_search(init_state, goal_state)
+
+	if mode == 'astar':
+		func_astar_search()
+
 	# func_print_tree(init_state)
-	result = []
-	func_print_string(init_state, result)
-	print result
-	# func_write_file(output, ['(3,3,left,0,0)', '(2,3,left,1,0)', '(0,3,right,3,0)', '(1,3,left,2,0)', '(1,1,right,2,2)', '(2,2,left,1,1)', '(2,0,right,1,3)', '(3,0,left,0,3)', '(1,0,right,2,3)', '(1,1,left,2,2)', '(0,0,right,3,3)', '(1,3,right,2,0)'])
+	results = []
+	func_print_string(init_state, results, goal_state)
+	# func_write_file(output, results)
+	# print results
