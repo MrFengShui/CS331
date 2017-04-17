@@ -117,7 +117,7 @@ def func_dfs_search(state, goal):
 			return tmp_state
 		successor = func_build_successor(tmp_state)
 		tmp_state.store_states(successor)
-		if tmp_state not in state_explore:
+		if not func_state_exist(tmp_state, state_explore):
 			state_explore.append(tmp_state)
 			for item in successor:
 				if (not func_state_exist(item, state_explore)) and (not item.is_initial()):
@@ -135,7 +135,7 @@ def func_bfs_search(state, goal):
 			return tmp_state
 		successor = func_build_successor(tmp_state)
 		tmp_state.store_states(successor)
-		if tmp_state not in state_explore:
+		if not func_state_exist(tmp_state, state_explore):
 			state_explore.append(tmp_state)
 			for item in successor:
 				if (not func_state_exist(item, state_explore)) and (not item.is_initial()):
@@ -144,26 +144,42 @@ def func_bfs_search(state, goal):
 	return None
 
 def func_dls_search(state, goal, depth):
-	if depth == 0 and state.is_goal(goal):
+	if state.is_goal(goal):
 		return state
-
-	if depth > 0:
+	elif depth == 0:
+		return None
+	else:
 		successor = func_build_successor(state)
 		state.store_states(successor)
+		print state.fetch_lhs(), state.fetch_rhs()
 		for item in state.load_states():
 			found = func_dls_search(item, goal, depth - 1)
-			if found:
+			if found != None:
 				return found
 
-	return None
+		return None
+# def func_dls_search(state, goal, depth):
+# 	if depth == 0 and state.is_goal(goal):
+# 		return state
+#
+# 	if depth > 0:
+# 		successor = func_build_successor(state)
+# 		state.store_states(successor)
+# 		# print state.fetch_lhs(), state.fetch_rhs()
+# 		for item in state.load_states():
+# 			found = func_dls_search(item, goal, depth - 1)
+# 			if found:
+# 				return found
+#
+# 	return None
 
 def func_iddfs_search(state, goal, depth = 0):
-	while True:
+	while depth < 13:
+		print depth
 		found = func_dls_search(state, goal, depth)
-		if found:
+		if found != None:
 			return found
 		depth += 1
-	return None
 
 def func_astar_search():
 	return None
@@ -214,6 +230,7 @@ def func_write_file(name, results):
 	fp.close()
 
 if __name__ == '__main__':
+	sys.setrecursionlimit(999999999)
 	params = sys.argv
 	start_file = params[1]
 	goal_file = params[2]
@@ -221,6 +238,8 @@ if __name__ == '__main__':
 	output = params[4]
 	start_lhs, start_rhs = func_read_file(start_file)
 	goal_lhs, goal_rhs = func_read_file(goal_file)
+	# print start_lhs, start_rhs
+	# print goal_lhs, goal_rhs
 	goal_state, init_state = State(goal_lhs, goal_rhs), State(start_lhs, start_rhs)
 
 	if mode == 'bfs':
@@ -238,5 +257,5 @@ if __name__ == '__main__':
 	# func_print_tree(init_state)
 	results = []
 	func_print_string(init_state, results, goal_state)
-	# func_write_file(output, results)
-	# print results
+	func_write_file(output, results)
+	print results, len(results)
