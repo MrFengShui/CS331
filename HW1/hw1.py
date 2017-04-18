@@ -1,10 +1,11 @@
-import sys, time
+import sys, time, operator
 
 class State():
-	def __init__(self, lhs, rhs, states = []):
+	def __init__(self, lhs, rhs, states = [], value = 0):
 		self.lhs = lhs
 		self.rhs = rhs
 		self.states = states
+		self.value = value
 
 	def is_initial(self):
 		return self.lhs['C'] == 0 and self.lhs['M'] == 0 and self.lhs['B'] == 0
@@ -126,11 +127,11 @@ def func_dfs_search(state, goal):
 	return None
 
 def func_bfs_search(state, goal):
-	state_stack, state_explore = [], []
-	state_stack.append(state)
+	state_queue, state_explore = [], []
+	state_queue.append(state)
 
-	while state_stack:
-		tmp_state = state_stack.pop(0)
+	while state_queue:
+		tmp_state = state_queue.pop(0)
 		if tmp_state.is_goal(goal):
 			return tmp_state
 		successor = func_build_successor(tmp_state)
@@ -139,49 +140,62 @@ def func_bfs_search(state, goal):
 			state_explore.append(tmp_state)
 			for item in successor:
 				if (not func_state_exist(item, state_explore)) and (not item.is_initial()):
-					state_stack.append(item)
+					state_queue.append(item)
 
 	return None
 
-def func_dls_search(state, goal, depth):
-	if state.is_goal(goal):
+def func_dls_search(state, goal, depth, state_explore = []):
+	state_explore.append(state)
+	if state.is_goal(goal) and depth == 0:
 		return state
-	elif depth == 0:
-		return None
 	else:
-		successor = func_build_successor(state)
+		flag, successor = False, func_build_successor(state)
 		state.store_states(successor)
-		print state.fetch_lhs(), state.fetch_rhs()
-		for item in state.load_states():
-			found = func_dls_search(item, goal, depth - 1)
-			if found != None:
-				return found
+		for item in successor:
+			if not func_state_exist(item, state_explore):
+				found = func_dls_search(item, goal, depth - 1, state_explore)
+				if found != None:
+					return found
 
 		return None
-# def func_dls_search(state, goal, depth):
-# 	if depth == 0 and state.is_goal(goal):
-# 		return state
-#
-# 	if depth > 0:
-# 		successor = func_build_successor(state)
-# 		state.store_states(successor)
-# 		# print state.fetch_lhs(), state.fetch_rhs()
-# 		for item in state.load_states():
-# 			found = func_dls_search(item, goal, depth - 1)
-# 			if found:
-# 				return found
-#
-# 	return None
+		
 
 def func_iddfs_search(state, goal, depth = 0):
-	while depth < 13:
-		print depth
+	while True:
 		found = func_dls_search(state, goal, depth)
-		if found != None:
+		if found != False:
 			return found
 		depth += 1
 
-def func_astar_search():
+def func_calc_h(state, goal):
+	diff_c = goal.fetch_lhs()['C'] - state.fetch_lhs()['C']
+	diff_m = goal.fetch_rhs()['M'] - state.fetch_rhs()['M']
+	return diff_c + diff_m
+
+def func_calc_c(state, goal, length = 0):
+	for item in state.load_states():
+		if not item.is_goal(goal):
+			func_calc_c(item, goal, length + 1)
+	return length
+	
+def func_astar_search(state, goal):
+	state_queue, state_explore, state.value = [], [], func_calc_h(state, goal)
+	state_queue.append(state)
+	
+	while len(state_queue) > 0:
+		tmp_state = state_queue.pop(0)
+		if tmp_state.is_goal(goal):
+			return tmp_state
+		successor = func_build_successor(tmp_state)
+		tmp_state.store_states(successor)
+		if not func_state_exist(tmp_state, state_explore):
+			state_explore.append(tmp_state)
+			for item in successor:
+				if (not func_state_exist(item, state_queue)) and (not func_state_exist(item, state_explore)):
+					item.value = func_calc_c(item, state) + func_calc_h(item, state)
+					state_queue.append(item)
+					state_queue.sort(key = operator.attrgetter('value'))
+	
 	return None
 
 def func_print_state(state):
@@ -252,7 +266,7 @@ if __name__ == '__main__':
 		func_iddfs_search(init_state, goal_state)
 
 	if mode == 'astar':
-		func_astar_search()
+		func_astar_search(init_state, goal_state)
 
 	# func_print_tree(init_state)
 	results = []

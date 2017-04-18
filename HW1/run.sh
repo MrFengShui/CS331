@@ -1,5 +1,5 @@
 #!/bin/sh
-for mode in "bfs" "dfs" "iddfs" "astart"
+for mode in "bfs" "dfs" "iddfs" "astar"
 do
     for num in 1 2 3
     do
