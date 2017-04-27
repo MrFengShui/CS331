@@ -43,7 +43,11 @@ public:
     MinimaxPlayer* clone();
 
 private:
-
+	int utility(OthelloBoard* b);
+	std::vector<OthelloBoard> successor(OthelloBoard* b);
+	void minimax(OthelloBoard* b, int depth);
+	int max_value(OthelloBoard* b);
+	int min_value(OthelloBoard* b);
 };
 
 
