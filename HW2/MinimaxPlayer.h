@@ -19,6 +19,12 @@
 class MinimaxPlayer : public Player {
 public:
 
+	struct OthelloBoardState
+	{
+		int column, row, value;
+		OthelloBoard* board;
+	};
+
 	/**
 	 * @param symb This is the symbol for the minimax player's pieces
 	 */
@@ -43,11 +49,15 @@ public:
     MinimaxPlayer* clone();
 
 private:
+
+	char which_symbol;
+
+	bool is_over(OthelloBoard* b);
 	int utility(OthelloBoard* b);
-	std::vector<OthelloBoard> successor(OthelloBoard* b);
-	void minimax(OthelloBoard* b, int depth);
 	int max_value(OthelloBoard* b);
 	int min_value(OthelloBoard* b);
+	std::vector<OthelloBoardState> successor(OthelloBoard* b);
+
 };
 
 

@@ -8,12 +8,12 @@
 #include "OthelloBoard.h"
 
 OthelloBoard::OthelloBoard(int cols, int rows, char p1_symb, char p2_symb) :
-		Board(cols, rows), p1_symbol(p1_symb), p2_symbol(p2_symb) {
+	Board(cols, rows), p1_symbol(p1_symb), p2_symbol(p2_symb) {
 
 }
 
 OthelloBoard::OthelloBoard(const OthelloBoard& other) :
-		Board(other), p1_symbol(other.p1_symbol), p2_symbol(other.p2_symbol) {
+	Board(other), p1_symbol(other.p1_symbol), p2_symbol(other.p2_symbol) {
 
 }
 
@@ -37,48 +37,47 @@ OthelloBoard& OthelloBoard::operator=(const OthelloBoard& rhs) {
 	return *this;
 }
 
-void OthelloBoard::set_coords_in_direction(int col, int row, int& next_col,
-		int& next_row, int dir) const {
+void OthelloBoard::set_coords_in_direction(int col, int row, int& next_col, int& next_row, int dir) const {
 	switch (dir) {
-	case N:
-		next_col = col;
-		next_row = row + 1;
-		break;
-	case NE:
-		next_col = col + 1;
-		next_row = row + 1;
-		break;
-	case E:
-		next_col = col + 1;
-		next_row = row;
-		break;
-	case SE:
-		next_col = col + 1;
-		next_row = row - 1;
-		break;
-	case S:
-		next_col = col;
-		next_row = row - 1;
-		break;
-	case SW:
-		next_col = col - 1;
-		next_row = row - 1;
-		break;
-	case W:
-		next_col = col - 1;
-		next_row = row;
-		break;
-	case NW:
-		next_col = col - 1;
-		next_row = row + 1;
-		break;
-	default:
-		assert("Invalid direction");
+		case N:
+			next_col = col;
+			next_row = row + 1;
+			break;
+		case NE:
+			next_col = col + 1;
+			next_row = row + 1;
+			break;
+		case E:
+			next_col = col + 1;
+			next_row = row;
+			break;
+		case SE:
+			next_col = col + 1;
+			next_row = row - 1;
+			break;
+		case S:
+			next_col = col;
+			next_row = row - 1;
+			break;
+		case SW:
+			next_col = col - 1;
+			next_row = row - 1;
+			break;
+		case W:
+			next_col = col - 1;
+			next_row = row;
+			break;
+		case NW:
+			next_col = col - 1;
+			next_row = row + 1;
+			break;
+		default:
+			assert("Invalid direction");
 	}
 }
 
 bool OthelloBoard::check_endpoint(int col, int row, char symbol, int dir,
-		bool match_symbol) const {
+	bool match_symbol) const {
 	int next_row = -1;
 	int next_col = -1;
 
@@ -176,4 +175,14 @@ int OthelloBoard::count_score(char symbol) const {
 void OthelloBoard::play_move(int col, int row, char symbol) {
 	set_cell(col, row, symbol);
 	flip_pieces(col, row, symbol);
+}
+
+int OthelloBoard::get_num_cols()
+{
+	return num_cols;
+}
+
+int OthelloBoard::get_num_rows()
+{
+	return num_rows;
 }

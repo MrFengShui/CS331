@@ -10,7 +10,7 @@ void Board::delete_grid() {
 }
 
 Board::Board(int cols, int rows) :
-		num_cols(cols), num_rows(rows) {
+	num_cols(cols), num_rows(rows) {
 	grid = new char*[num_cols];
 	for (int c = 0; c < num_cols; c++) {
 		grid[c] = new char[num_rows];
@@ -103,4 +103,3 @@ void Board::display() const {
 	}
 	std::cout << "\n\n";
 }
-
