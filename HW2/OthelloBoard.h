@@ -104,9 +104,6 @@ public:
      */
     char get_p2_symbol() { return p2_symbol; }
 
-	int get_num_cols();
-	int get_num_rows();
-
 private:
 
     /** The symbol for Player 1's pieces */
