@@ -21,23 +21,10 @@ MinimaxPlayer::~MinimaxPlayer() {
 void MinimaxPlayer::get_move(OthelloBoard* b, int& col, int& row)
 {
     // To be filled in by you
-	int move = -100, i, best;
 	which_symbol = symbol;
-	std::vector<MinimaxPlayer::OthelloBoardState> state_vec = successor(b);
-
-	for (i = 0; i < state_vec.size(); i ++)
-	{
-		int tmp_value = min_value(state_vec[i].board);
-
-		if (tmp_value > move)
-		{
-			move = tmp_value;
-			best = i;
-		}
-	}
-
-	col = state_vec[best].column;
-	row = state_vec[best].row;
+	MinimaxPlayer::OthelloBoardState best_state = minimax_decision(b, col, row);
+	col = best_state.column;
+	row = best_state.row;
 }
 
 MinimaxPlayer* MinimaxPlayer::clone() {
@@ -83,6 +70,25 @@ std::vector<MinimaxPlayer::OthelloBoardState> MinimaxPlayer::successor(OthelloBo
 	}
 
 	return b_vector;
+}
+
+MinimaxPlayer::OthelloBoardState MinimaxPlayer::minimax_decision(OthelloBoard* b, int& col, int& row)
+{
+	int move = -100, i, best;
+	std::vector<MinimaxPlayer::OthelloBoardState> state_vec = successor(b);
+
+	for (i = 0; i < state_vec.size(); i ++)
+	{
+		int tmp_value = min_value(state_vec[i].board);
+
+		if (tmp_value > move)
+		{
+			move = tmp_value;
+			best = i;
+		}
+	}
+
+	return state_vec[best];
 }
 
 int MinimaxPlayer::max_value(OthelloBoard* b)

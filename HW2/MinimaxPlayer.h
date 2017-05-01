@@ -52,11 +52,37 @@ private:
 		OthelloBoard* board;
 	};
 
+	/**
+	 * @param b The board object for the current state of the board
+	 */
 	bool is_over(OthelloBoard* b);
+
+	/**
+	 * @param b The board object for the current state of the board
+	 */
 	int utility(OthelloBoard* b);
-	int max_value(OthelloBoard* b);
-	int min_value(OthelloBoard* b);
+
+	/**
+	 * @param b The board object for the current state of the board
+	 */
 	std::vector<OthelloBoardState> successor(OthelloBoard* b);
+
+	/**
+	 * @param b The board object for the current state of the board
+	 * @param col Holds the return value for the column of the move
+	 * @param row Holds the return value for the row of the move
+	 */
+	MinimaxPlayer::OthelloBoardState minimax_decision(OthelloBoard *b, int& col, int& row);
+
+	/**
+	 * @param b The board object for the current state of the board
+	 */
+	int max_value(OthelloBoard* b);
+
+	/**
+	 * @param b The board object for the current state of the board
+	 */
+	int min_value(OthelloBoard* b);
 
 };
 
