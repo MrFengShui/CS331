@@ -90,37 +90,37 @@ void GameDriver::run() {
     display();
     std::cout << "Player 1 (" << p1->get_symbol() << ") move:\n";
     while (1) {
-	if( board->has_legal_moves_remaining(current->get_symbol())) {
-	    cant_move_counter = 0;
-	    process_move(current, opponent);
-	    display();
-	} else {
-	    std::cout << "Can't move\n";
-	    if( cant_move_counter == 1 ) {
-		// Both players can't move, game over                       
-		break;
-	    } else {
-		cant_move_counter++;
-	    }
-	}
-	toggle = (toggle + 1) % 2;
-	if (toggle == 0) {
-	    current = p1;
-	    opponent = p2;
-	    std::cout << "Player 1 (" << p1->get_symbol() << ") move:\n";
-	} else {
-	    current = p2;
-	    opponent = p1;
-	    std::cout << "Player 2 (" << p2->get_symbol() << ") move:\n";
-	}
+		if( board->has_legal_moves_remaining(current->get_symbol())) {
+		    cant_move_counter = 0;
+		    process_move(current, opponent);
+		    display();
+		} else {
+		    std::cout << "Can't move\n";
+		    if( cant_move_counter == 1 ) {
+			// Both players can't move, game over
+			break;
+		    } else {
+			cant_move_counter++;
+		    }
+		}
+		toggle = (toggle + 1) % 2;
+		if (toggle == 0) {
+		    current = p1;
+		    opponent = p2;
+		    std::cout << "Player 1 (" << p1->get_symbol() << ") move:\n";
+		} else {
+		    current = p2;
+		    opponent = p1;
+		    std::cout << "Player 2 (" << p2->get_symbol() << ") move:\n";
+		}
     }
 
     if ( board->count_score(p1->get_symbol()) == board->count_score(p2->get_symbol())) {
-	std::cout << "Tie game" << std::endl;
-    } else if ( board->count_score(p1->get_symbol()) > board->count_score(p2->get_symbol())) {
-	std::cout << "Player 1 wins" << std::endl;
+		std::cout << "Tie game" << std::endl;
+	} else if ( board->count_score(p1->get_symbol()) > board->count_score(p2->get_symbol())) {
+		std::cout << "Player 1 wins" << std::endl;
     } else {
-	std::cout << "Player 2 wins" << std::endl;
+		std::cout << "Player 2 wins" << std::endl;
     }
 }
 

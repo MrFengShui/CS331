@@ -19,12 +19,6 @@
 class MinimaxPlayer : public Player {
 public:
 
-	struct OthelloBoardState
-	{
-		int column, row, value;
-		OthelloBoard* board;
-	};
-
 	/**
 	 * @param symb This is the symbol for the minimax player's pieces
 	 */
@@ -51,6 +45,12 @@ public:
 private:
 
 	char which_symbol;
+
+	struct OthelloBoardState
+	{
+		int column, row, value;
+		OthelloBoard* board;
+	};
 
 	bool is_over(OthelloBoard* b);
 	int utility(OthelloBoard* b);

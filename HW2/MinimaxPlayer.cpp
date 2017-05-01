@@ -21,33 +21,18 @@ MinimaxPlayer::~MinimaxPlayer() {
 void MinimaxPlayer::get_move(OthelloBoard* b, int& col, int& row)
 {
     // To be filled in by you
-	// std::cout << b -> get_num_cols() << b -> get_num_rows();
+	int move = -100, i, best;
+	which_symbol = symbol;
 	std::vector<MinimaxPlayer::OthelloBoardState> state_vec = successor(b);
-	int min = -100, max = 100;
-	int value = -1, i, best;
-	which_symbol = (which_symbol == b -> get_p1_symbol()) ? b -> get_p2_symbol() : b -> get_p1_symbol();
 
 	for (i = 0; i < state_vec.size(); i ++)
 	{
-		if (b -> get_p1_symbol() == symbol)
-		{
-			int tmp_value = min_value(state_vec[i].board);
+		int tmp_value = min_value(state_vec[i].board);
 
-			if (tmp_value > max)
-			{
-				max = tmp_value;
-				best = i;
-			}
-		}
-		else
+		if (tmp_value > move)
 		{
-			int tmp_value = max_value(state_vec[i].board);
-
-			if (tmp_value < min)
-			{
-				min = tmp_value;
-				best = i;
-			}
+			move = tmp_value;
+			best = i;
 		}
 	}
 
@@ -87,11 +72,11 @@ std::vector<MinimaxPlayer::OthelloBoardState> MinimaxPlayer::successor(OthelloBo
 			if (b -> is_legal_move(i, j, which_symbol))
 			{
 				state = new OthelloBoardState;
+				state -> board = new OthelloBoard(*b);
+				state -> board -> play_move(i, j, which_symbol);
 				state -> column = i;
 				state -> row = j;
 				state -> value = -1;
-				state -> board = new OthelloBoard(*b);
-				state -> board -> play_move(i, j, which_symbol);
 				b_vector.push_back(*state);
 			}
 		}
