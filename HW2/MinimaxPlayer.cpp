@@ -74,14 +74,14 @@ std::vector<MinimaxPlayer::OthelloBoardState> MinimaxPlayer::successor(OthelloBo
 
 MinimaxPlayer::OthelloBoardState MinimaxPlayer::minimax_decision(OthelloBoard* b, int& col, int& row)
 {
-	int move = -100, i, best;
+	int move = 999999999, i, best;
 	std::vector<MinimaxPlayer::OthelloBoardState> state_vec = successor(b);
 
 	for (i = 0; i < state_vec.size(); i ++)
 	{
-		int tmp_value = min_value(state_vec[i].board);
+		int tmp_value = max_value(state_vec[i].board);
 
-		if (tmp_value > move)
+		if (tmp_value < move)
 		{
 			move = tmp_value;
 			best = i;
