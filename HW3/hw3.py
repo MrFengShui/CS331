@@ -11,7 +11,7 @@ class DataRow:
 
 	def row_feature(self):
 		return int(self.row[1][:-1])
-		
+
 	def build_common_words(self, dataset):
 		count, common = func_count_word(dataset), []
 		for key, value in count.items():
@@ -24,13 +24,52 @@ class BayesData:
 		self.word = word
 		self.idx = idx
 		self.features = features
-		
+
 class Feature:
 
 	def __init__(self, feature, label):
 		self.feature = feature
 		self.label = label
-		
+
+class Bayessian:
+
+	def __init__(self, word, idx, features):
+		self.word = word
+		self.idx = idx
+		self.features = features
+
+	def count_label(self):
+		pos_cnt, neg_cnt = 0, 0
+		for feature in self.features:
+			if feature.label == 1:
+				pos_cnt += 1
+			if feature.label == 0:
+				neg_cnt += 1
+		return pos_cnt, neg_cnt
+
+	def count_feature(self):
+		pos_cnt_1, neg_cnt_1 = 0, 0
+		pos_cnt_2, neg_cnt_2 = 0, 0
+		for feature in self.features:
+			if feature.label == 1 and feature.feature[idx] == 1: pos_cnt_1 += 1
+			if feature.label == 1 and feature.feature[idx] == 0: neg_cnt_1 += 1
+			if feature.label == 0 and feature.feature[idx] == 1: pos_cnt_2 += 1
+			if feature.label == 0 and feature.feature[idx] == 0: neg_cnt_2 += 1
+		return pos_cnt_1, neg_cnt_1, pos_cnt_2, neg_cnt_2
+
+	def fetch_prob(self):
+		pos_cnt_1, neg_cnt_1, pos_cnt_2, neg_cnt_2 = self.count_feature()
+		pos_cnt, neg_cnt = self.calc_prob()
+		pos_prob_1 = float(pos_cnt_1 + 1) / float(pos_cnt + 2)
+		neg_prob_1 = float(neg_cnt_1 + 1) / float(neg_cnt + 2)
+		pos_prob_2 = float(pos_cnt_2 + 1) / float(pos_cnt + 2)
+		neg_prob_2 = float(neg_cnt_2 + 1) / float(pos_cnt + 2)
+		return pos_prob_1, neg_prob_1, pos_prob_2, neg_prob_2
+
+	def calc_prob(self, label):
+		pos_cnt, neg_cnt = self.count_label()
+		return float(pos_cnt) / (pos_cnt + neg_cnt) if label == 1 else float(neg_cnt) / (pos_cnt + neg_cnt)
+
 def func_load_file(name):
 	dataset = []
 	with open(name, 'r') as file:
@@ -45,7 +84,7 @@ def func_store_file(name, words, features):
 		for feature in features:
 			file.write(feature)
 		file.close()
-	
+
 def func_count_word(dataset):
 	count = {}
 	for datarow in dataset:
