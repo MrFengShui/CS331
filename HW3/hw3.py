@@ -1,4 +1,4 @@
-import math
+import math, time
 
 def func_load_file(name, dataset = []):
 	with open(name, 'r') as file:
@@ -63,9 +63,40 @@ def func_calc_feature_prob(word_list, label_list, feature_list):
 		neg_prob[word_list[i]] = func_calc_prob(word_list, neg_feature_list, i, neg_cnt)
 	return pos_prob, neg_prob
 
+def func_fetch_prob(word_list, label_list, feature_list, label, idx = None):
+	if idx == None:
+		prob = func_calc_label_prob(label_list)
+		return prob[label]
+	else:
+		word = word_list[idx]
+		pos_prob, neg_prob = func_calc_feature_prob(word_list, label_list, feature_list)
+		return pos_prob[word] if label else neg_prob[word]
+
+def func_sum_prob(word_list, label_list, feature_list, feature, label):
+	result = math.log(func_fetch_prob(word_list, label_list, feature_list, label))
+	tick = time.time()
+	for i in range(len(feature)):
+		if feature[i] == 1: result += math.log(func_fetch_prob(word_list, label_list, feature_list, label, i))
+	print '--- %.3f(s)' % (time.time() - tick)
+	return result
+
+def func_test_data(word_list, label_list, feature_list, pred_list = []):
+	for feature in feature_list:
+		sum_prob = []
+		sum_prob.append(func_sum_prob(word_list, label_list, feature_list, feature, 1))
+		sum_prob.append(func_sum_prob(word_list, label_list, feature_list, feature, 0))
+		print '+++', sum_prob
+		idx = sum_prob.index(sum_prob[0] if sum_prob[0] > sum_prob[1] else sum_prob[1])
+		pred_list.append(idx)
+	print pred_list
+	pred_len, pred_sum = len(pred_list), [abs(pred_list[i] - label_list[i]) for i in range(len(pred_list))]
+	accuracy = float(pred_len - sum(abs(pred_list - pred_sum))) / pred_len
+	return str(accuracy * 100) + '%'
+
 if __name__ == '__main__':
-	train_set = func_load_file('trainingSet.txt')
+	train_set, test_set = func_load_file('trainingSet.txt'), func_load_file('testSet.txt')
 	word_list, label_list = func_filter_line(train_set)
 	feature_list = func_create_feature(train_set, word_list)
 	# func_write_file('preprocessed_train.txt', word_list, label_list, feature_list)
-	# print func_calc_feature_prob(word_list, label_list, feature_list)
+	# for feature in feature_list: print func_sum_prob(feature, 1)
+	print func_test_data(word_list, label_list, feature_list)
