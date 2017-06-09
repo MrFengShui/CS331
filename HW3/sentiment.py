@@ -1,7 +1,8 @@
 #Sentiment Analysis
 #Songjian Luan: luans
 #Raja Petroff: petroffr
-import math, string
+
+import math
 
 class DataSet:
 
@@ -32,9 +33,9 @@ class DataSet:
 
 	def func_build_set(self):
 		self.func_load_file()
-		fst_list = self.func_filter_line(self.fst_set, [])
-		snd_list = self.func_filter_line(self.snd_set, [])
-		return fst_list + snd_list
+		word_list = self.func_filter_line(self.fst_set, [])
+		word_list = self.func_filter_line(self.snd_set, word_list)
+		return word_list
 
 class DataRaw:
 
@@ -57,7 +58,7 @@ class DataRaw:
 	def func_write_file(self, target):
 		feature_list, label_list = self.func_feature_label([], [])
 		with open(target, 'w+') as file:
-			file.write(' '.join(self.word_list) + ' - label\n')
+			file.write(' '.join(self.word_list) + ' - classlabel\n')
 			for i in range(len(feature_list)):
 				file.write(' '.join([str(item) for item in feature_list[i]]) + ' - ' + str(label_list[i]) + '\n')
 			file.close()
@@ -83,16 +84,15 @@ class DataEval:
 		return pos_cnt, neg_cnt, pos_feature_list, neg_feature_list
 
 	def func_calc_prob(self, feature_list, idx, feature_cnt):
-		features, count = [item[idx] for item in feature_list], 0
-		for feature in features:
-			if feature == 1: count += 1
-		return float(count + 1) / (feature_cnt + len(self.word_list))
+		features = [item[idx] for item in feature_list if item[idx] == 1]
+		return float(len(features) + 1) / (feature_cnt + len(self.word_list))
 
 	def func_calc_feature_prob(self, pos_prob = {}, neg_prob = {}):
 		pos_cnt, neg_cnt, pos_feature_list, neg_feature_list = self.func_feature_classify()
 		for i in range(len(word_list)):
-			pos_prob[self.word_list[i]] = self.func_calc_prob(pos_feature_list, i, pos_cnt)
-			neg_prob[self.word_list[i]] = self.func_calc_prob(neg_feature_list, i, neg_cnt)
+			word = self.word_list[i]
+			pos_prob[word] = self.func_calc_prob(pos_feature_list, i, pos_cnt)
+			neg_prob[word] = self.func_calc_prob(neg_feature_list, i, neg_cnt)
 		return pos_prob, neg_prob
 
 	def func_calc_label_prob(self):
@@ -101,19 +101,19 @@ class DataEval:
 		neg_prob = float(label_size - label_sum + 1) / (label_size + 2)
 		return pos_prob, neg_prob
 
-	def func_fetch_prob(self, label, idx = None, pos_prob = None, neg_prob = None):
-		if idx == None:
-			pos_prob, neg_prob = self.func_calc_label_prob()
-			return pos_prob if label == 0 else neg_prob
-		else:
-			word = self.word_list[idx]
-			return pos_prob[word] if label else neg_prob[word]
+	def func_fetch_label_prob(self, label):
+		pos_prob, neg_prob = self.func_calc_label_prob()
+		return pos_prob if label == 0 else neg_prob
+
+	def func_fetch_feature_prob(self, label, idx, pos_prob, neg_prob):
+		word = self.word_list[idx]
+		return pos_prob[word] if label == 0 else neg_prob[word]
 
 	def func_sum_prob(self, feature, label, pos_prob, neg_prob):
-		prob_sum = math.log(self.func_fetch_prob(label))
+		prob_sum = math.log(self.func_fetch_label_prob(label))
 		for idx in range(len(feature)):
 			if feature[idx]:
-				prob = self.func_fetch_prob(label, idx, pos_prob, neg_prob)
+				prob = self.func_fetch_feature_prob(label, idx, pos_prob, neg_prob)
 				prob_sum += math.log(prob)
 		return prob_sum
 
@@ -122,32 +122,33 @@ def func_train_test(dataeval, pred_list = []):
 	for feature in feature_list:
 		pos_sum = dataeval.func_sum_prob(feature, 1, pos_prob, neg_prob)
 		neg_sum = dataeval.func_sum_prob(feature, 0, pos_prob, neg_prob)
-		prob_sum = (pos_sum, neg_sum)
-		pred_list.append(prob_sum.index(max(prob_sum)))
+		pred_list.append(1 if pos_sum > neg_sum else 0)
 	diff_list = [pred_list[i] - dataeval.label_list[i] for i in range(len(dataeval.label_list))]
 	accuracy = float(len(pred_list) - sum(diff_list)) / len(pred_list)
 	return str(accuracy * 100) + '%'
 
-# def func_run_data(src, dest, title):
-# 	train_set = func_load_file(src)
-# 	word_list, label_list = func_filter_line(train_set)
-# 	feature_list = func_create_feature(train_set, word_list, [])
-# 	print '===== Writing Results to', title, 'File ====='
-# 	func_write_file(dest, word_list, label_list, feature_list)
-# 	print '=====', title, 'on Traning Set Result ====='
-# 	print 'Accuracy:', func_train_test(word_list, label_list, feature_list)
-# 	with open('results.txt', 'a+') as file:
-# 		file.write('=====' + title + ' on Traning Set Result =====')
-# 		file.write('\n')
-# 		file.write('Accuracy: ' + str(func_train_test(word_list, label_list, feature_list)))
-# 		file.write('\n')
-# 		file.close()
-
 if __name__ == '__main__':
 	dataset = DataSet('trainingSet.txt', 'testSet.txt')
 	word_list = dataset.func_build_set()
+	print '=====', 'Training on Training Accuracy Result', '====='
 	dataraw = DataRaw(word_list, 'trainingSet.txt')
+	dataraw.func_write_file('preprocessed_test.txt')
 	feature_list, label_list = dataraw.func_feature_label([], [])
-	# dataraw.func_write_file('preprocessed_train.txt')
 	dataeval = DataEval(word_list, feature_list, label_list)
-	print func_train_test(dataeval, [])
+	training_accuracy = func_train_test(dataeval, [])
+	print 'Accuracy:', training_accuracy
+	print '=====', 'Test on Training Accuracy Result', '====='
+	dataraw = DataRaw(word_list, 'testSet.txt')
+	dataraw.func_write_file('preprocessed_test.txt')
+	feature_list, label_list = dataraw.func_feature_label([], [])
+	dataeval = DataEval(word_list, feature_list, label_list)
+	test_accuracy = func_train_test(dataeval, [])
+	print 'Accuracy:', test_accuracy
+	with open('results.txt', 'w+') as file:
+		file.write('===== Training on Training Accuracy Result =====')
+		file.write('\n')
+		file.write('Accuracy: ' + training_accuracy + '\n')
+		file.write('===== Test on Training Accuracy Result =====')
+		file.write('\n')
+		file.write('Accuracy: ' + test_accuracy + '\n')
+		file.close()
